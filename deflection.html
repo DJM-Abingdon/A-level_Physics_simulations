@@ -1,5 +1,215 @@
-<a href="deflection.html" class="card">
-    <div class="icon">☄️</div>
-    <h3>Particle Deflection</h3>
-    <p>Predict trajectories in uniform electric fields and visualize potential lines.</p>
-</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deflection Lab: Relativistic Limit</title>
+    <style>
+        :root { --panel: #f8fafc; --bg: #e2e8f0; --accent: #2563eb; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #1e293b; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        
+        .nav-header { width: 100%; padding: 15px; background: #1e293b; display: flex; justify-content: flex-start; }
+        .back-btn { color: #38bdf8; text-decoration: none; font-weight: bold; border: 1px solid #38bdf8; padding: 5px 15px; border-radius: 4px; }
+        
+        .main-layout { display: flex; gap: 20px; padding: 20px; width: 1100px; justify-content: center; }
+        .controls { width: 350px; background: var(--panel); padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .canvas-area { background: #ffffff; border-radius: 12px; border: 2px solid #cbd5e1; position: relative; }
+        
+        .slider-group { margin-bottom: 18px; }
+        label { display: block; font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: bold; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--accent); }
+        select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 5px; }
+
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button { padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: bold; }
+        .fire-btn { grid-column: span 2; background: #10b981; color: white; border: none; font-size: 16px; }
+        .toggle-btn { background: white; color: #64748b; font-size: 11px; }
+        .toggle-btn.active { background: var(--accent); color: white; }
+        
+        .stats { background: #f1f5f9; padding: 12px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent); font-family: 'Courier New', monospace; font-size: 12px; }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .warning { color: #dc2626; font-size: 10px; margin-top: 5px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="nav-header">
+    <a href="index.html" class="back-btn">← Back to Library</a>
+</div>
+
+<h2 style="color: #1e293b; margin: 15px 0;">Electric Field Deflection: Relativistic Scale</h2>
+
+<div class="main-layout">
+    <div class="controls">
+        <div class="slider-group">
+            <label>Particle Physics:</label>
+            <select id="particleType">
+                <option value="electron">Electron (e⁻)</option>
+                <option value="proton">Proton (p⁺)</option>
+                <option value="alpha">Alpha Particle (α)</option>
+            </select>
+        </div>
+
+        <div class="slider-group">
+            <label>Plate Potential: <span id="vVal" style="color:var(--accent)">1000</span> V</label>
+            <input type="range" id="voltIn" min="-10000" max="10000" step="100" value="1000">
+        </div>
+
+        <div class="slider-group">
+            <label>Velocity as % of Light Speed (c): <span id="cVal" style="color:var(--accent)">10</span>%</label>
+            <input type="range" id="cSlider" min="1" max="80" value="10">
+            <div id="relWarning" class="warning">RELATIVISTIC MASS INCREASE ACTIVE</div>
+            <div style="font-size: 11px; color: #64748b; margin-top:5px;">
+                v ≈ <span id="fullVelDisp">3.00e7</span> m/s
+            </div>
+        </div>
+
+        <div class="slider-group">
+            <label>Plate Separation: <span id="dVal" style="color:var(--accent)">100</span> px</label>
+            <input type="range" id="distIn" min="50" max="200" value="100">
+        </div>
+
+        <div class="btn-row">
+            <button class="toggle-btn" id="fieldBtn" onclick="showField = !showField; this.classList.toggle('active')">Show E-Field</button>
+            <button class="toggle-btn" id="equiBtn" onclick="showEqui = !showEqui; this.classList.toggle('active')">Show Equipotentials</button>
+            <button class="fire-btn" onclick="fireParticle()">FIRE PARTICLE</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-line"><span>Lorentz Factor (γ):</span> <span id="gammaDisp">1.000</span></div>
+            <div class="stat-line"><span>Effective Mass:</span> <span id="massDisp">1.00</span> m₀</div>
+            <div class="stat-line"><span>Deflect (y):</span> <span id="deflectDisp">0</span> px</div>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <canvas id="simCanvas" width="700" height="450"></canvas>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const c = 3e8;
+
+    let showField = false;
+    let showEqui = false;
+    let particle = null;
+    let trail = [];
+
+    function fireParticle() {
+        const type = document.getElementById('particleType').value;
+        const cPercent = parseFloat(document.getElementById('cSlider').value) / 100;
+        
+        // Calculate Gamma (Lorentz Factor)
+        const gamma = 1 / Math.sqrt(1 - Math.pow(cPercent, 2));
+
+        let m0, charge, color;
+        if(type === 'electron') { m0 = 1; charge = -1; color = '#2563eb'; }
+        else if(type === 'proton') { m0 = 1836; charge = 1; color = '#dc2626'; }
+        else { m0 = 7200; charge = 2; color = '#d97706'; }
+
+        // Simulation speed scaling (vx is scaled down for display, but physics uses gamma)
+        const simVx = cPercent * 20; 
+
+        trail = [];
+        particle = { 
+            x: 0, y: 225, 
+            vx: simVx, vy: 0, 
+            m0: m0, 
+            gamma: gamma, 
+            charge: charge, 
+            color: color 
+        };
+    }
+
+    function draw() {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const V = parseFloat(document.getElementById('voltIn').value);
+        const d = parseFloat(document.getElementById('distIn').value);
+        const cPercent = parseFloat(document.getElementById('cSlider').value) / 100;
+        const pLen = 400;
+        const pStart = 150;
+        const topY = 225 - d/2;
+        const botY = 225 + d/2;
+
+        // UI Logic
+        const gamma = 1 / Math.sqrt(1 - Math.pow(cPercent, 2));
+        document.getElementById('vVal').innerText = V;
+        document.getElementById('cVal').innerText = (cPercent * 100).toFixed(0);
+        document.getElementById('fullVelDisp').innerText = (cPercent * c).toExponential(2);
+        document.getElementById('gammaDisp').innerText = gamma.toFixed(3);
+        document.getElementById('massDisp').innerText = gamma.toFixed(2);
+        document.getElementById('relWarning').style.display = cPercent > 0.1 ? 'block' : 'none';
+        document.getElementById('dVal').innerText = d;
+
+        // Background Grid
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        for(let i=0; i<700; i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,450); ctx.stroke(); }
+        for(let j=0; j<450; j+=50) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(700,j); ctx.stroke(); }
+
+        if(showEqui) {
+            ctx.setLineDash([8, 4]); ctx.strokeStyle = '#94a3b8';
+            for(let i=1; i<5; i++) {
+                let y = topY + (d * (i/5));
+                ctx.beginPath(); ctx.moveTo(pStart, y); ctx.lineTo(pStart+pLen, y); ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+
+        if(showField && V !== 0) {
+            ctx.strokeStyle = '#0ea5e9'; ctx.fillStyle = '#0ea5e9'; ctx.lineWidth = 2;
+            for(let i=0; i<11; i++) {
+                let x = pStart + 20 + (i * 36);
+                ctx.beginPath(); ctx.moveTo(x, topY); ctx.lineTo(x, botY); ctx.stroke();
+                let arrowY = V > 0 ? botY - 15 : topY + 15;
+                ctx.beginPath(); ctx.moveTo(x, arrowY); ctx.lineTo(x-6, arrowY + (V>0?-12:12)); ctx.lineTo(x+6, arrowY + (V>0?-12:12)); ctx.fill();
+            }
+        }
+
+        // Plates
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(pStart, topY - 10, pLen, 10); ctx.fillRect(pStart, botY, pLen, 10);
+        ctx.font = "bold 14px Arial";
+        ctx.fillStyle = V >= 0 ? '#dc2626' : '#2563eb';
+        ctx.fillText(V >= 0 ? `+${V}V` : `${V}V`, pStart, topY - 15);
+        ctx.fillStyle = V >= 0 ? '#2563eb' : '#dc2626';
+        ctx.fillText("0V (Ground)", pStart, botY + 25);
+
+        // Physics Logic
+        if(particle) {
+            if(particle.x >= pStart && particle.x <= pStart + pLen) {
+                // Relativistic Force: a = F / (gamma * m0)
+                // Note: Transverse mass is m = gamma * m0
+                let a = (particle.charge * (V/d)) / (particle.gamma * particle.m0 * 0.2); 
+                particle.vy += a;
+            }
+
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            trail.push({x: particle.x, y: particle.y});
+
+            if(((particle.y <= topY || particle.y >= botY) && (particle.x >= pStart && particle.x <= pStart+pLen)) || particle.x > 700 || particle.y < 0 || particle.y > 450) {
+                if(particle.x > 700) document.getElementById('deflectDisp').innerText = Math.abs(particle.y - 225).toFixed(1);
+                particle = null;
+            }
+        }
+
+        ctx.beginPath(); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
+        trail.forEach((p, i) => { if(i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+
+        if(particle) {
+            ctx.fillStyle = particle.color;
+            ctx.beginPath(); ctx.arc(particle.x, particle.y, 6, 0, 7); ctx.fill();
+            ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+        }
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+</script>
+</body>
+</html>
