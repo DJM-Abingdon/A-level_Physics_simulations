@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>KeV's Energy Level Lab</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        
+        /* Navigation Button */
+        .nav-header { width: 100%; padding: 15px; background: #1e293b; display: flex; justify-content: flex-start; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .back-btn { color: #00d4ff; text-decoration: none; font-weight: bold; border: 1px solid #00d4ff; padding: 5px 15px; border-radius: 4px; transition: 0.2s; }
+        .back-btn:hover { background: #00d4ff; color: #0f172a; }
+
+        #container { position: relative; border: 2px solid #334155; border-radius: 8px; overflow: hidden; background: #000; }
+        canvas { display: block; cursor: crosshair; }
+        .ui-overlay { position: absolute; top: 10px; left: 10px; pointer-events: none; }
+        .data-box { background: rgba(0,0,0,0.7); padding: 10px; border: 1px solid #00d4ff; border-radius: 5px; margin-bottom: 5px; }
+        .label { color: #888; font-size: 12px; }
+        .value { color: #00d4ff; font-weight: bold; font-size: 18px; }
+        .photon-text { color: #f1c40f; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="index.html" class="back-btn">← Back to Library</a>
+    </div>
+
+    <h2 style="margin-bottom: 5px; color: #f1c40f;">Electron Transition Simulator</h2>
+    <p style="margin: 0 0 15px 0; font-size: 14px; color: #94a3b8;">Grab the Blue Electron and jump between levels!</p>
+
+    <div id="container">
+        <div class="ui-overlay">
+            <div class="data-box">
+                <div class="label">CURRENT LEVEL</div>
+                <div id="lvlDisplay" class="value">n = 1</div>
+            </div>
+            <div class="data-box">
+                <div class="label">PHOTON ENERGY</div>
+                <div id="energyDisplay" class="value photon-text">0.00 eV</div>
+            </div>
+        </div>
+        <canvas id="atomSim" width="800" height="500"></canvas>
+    </div>
+
+<script>
+const canvas = document.getElementById('atomSim');
+const ctx = canvas.getContext('2d');
+const lvlDisp = document.getElementById('lvlDisplay');
+const energyDisp = document.getElementById('energyDisplay');
+
+const shells = [
+    { n: 1, e: -13.6, y: 440 },
+    { n: 2, e: -3.40, y: 280 },
+    { n: 3, e: -1.51, y: 180 },
+    { n: 4, e: -0.85, y: 110 },
+    { n: 5, e: -0.54, y: 60 }
+];
+
+let electron = { x: 400, y: shells[0].y, nIdx: 0, dragging: false };
+let photons = [];
+
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    shells.forEach((s, i) => {
+        const isCurrent = (electron.nIdx === i);
+        ctx.strokeStyle = isCurrent ? '#1e293b' : '#334155';
+        ctx.lineWidth = isCurrent ? 4 : 1;
+        ctx.beginPath();
+        ctx.moveTo(150, s.y);
+        ctx.lineTo(650, s.y);
+        ctx.stroke();
+        ctx.fillStyle = isCurrent ? '#00d4ff' : '#64748b';
+        ctx.font = "bold 14px Arial";
+        ctx.fillText(`n=${s.n}`, 110, s.y + 5);
+        ctx.textAlign = "left";
+        ctx.fillText(`${s.e} eV`, 665, s.y + 5);
+    });
+
+    photons.forEach((p, index) => {
+        p.x += p.dir * 4;
+        p.offset += 0.3;
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for(let i=0; i<50; i++) {
+            let x = p.x - (i * p.dir);
+            let y = p.y + Math.sin(p.offset - i*0.4) * 12;
+            if(i===0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        if(p.x > 900 || p.x < -100) photons.splice(index, 1);
+    });
+
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#00d4ff';
+    ctx.fillStyle = '#00d4ff';
+    ctx.beginPath();
+    ctx.arc(electron.x, electron.y, 12, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    requestAnimationFrame(draw);
+}
+
+function getMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+canvas.onmousedown = (e) => {
+    const m = getMouse(e);
+    const dist = Math.hypot(m.x - electron.x, m.y - electron.y);
+    if(dist < 30) electron.dragging = true;
+};
+
+window.onmousemove = (e) => {
+    if(!electron.dragging) return;
+    const m = getMouse(e);
+    electron.y = Math.max(20, Math.min(480, m.y));
+};
+
+window.onmouseup = () => {
+    if(!electron.dragging) return;
+    electron.dragging = false;
+    let closestIdx = 0;
+    let minDist = 9999;
+    shells.forEach((s, i) => {
+        let d = Math.abs(electron.y - s.y);
+        if(d < minDist) { minDist = d; closestIdx = i; }
+    });
+    if(closestIdx !== electron.nIdx) {
+        const dE = Math.abs(shells[closestIdx].e - shells[electron.nIdx].e);
+        energyDisp.innerText = dE.toFixed(2) + " eV";
+        const isDrop = closestIdx < electron.nIdx;
+        photons.push({ x: electron.x, y: shells[closestIdx].y, dir: isDrop ? 1 : -1, offset: 0, color: dE > 3.0 ? '#a855f7' : '#f1c40f' });
+    }
+    electron.nIdx = closestIdx;
+    electron.y = shells[closestIdx].y;
+    lvlDisp.innerText = `n = ${shells[closestIdx].n}`;
+};
+draw();
+</script>
+</body>
+</html>

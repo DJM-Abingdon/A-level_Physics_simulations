@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quantum Lab: Photoelectric Effect</title>
+    <style>
+        :root { --panel: #2c3e50; --bg: #ecf0f1; --accent: #3498db; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 0; margin: 0; color: #2c3e50; }
+        
+        /* Navigation Button */
+        .nav-header { width: 100%; padding: 15px; background: #2c3e50; display: flex; justify-content: flex-start; margin-bottom: 20px; }
+        .back-btn { color: #3498db; text-decoration: none; font-weight: bold; border: 1px solid #3498db; padding: 5px 15px; border-radius: 4px; transition: 0.2s; }
+        .back-btn:hover { background: #3498db; color: white; }
+
+        .main-layout { display: flex; gap: 20px; padding: 20px; max-width: 1000px; }
+        .controls { width: 320px; background: var(--panel); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .canvas-area { flex-grow: 1; background: white; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        canvas { background: #000; border-radius: 8px; cursor: crosshair; }
+        .slider-group { margin-bottom: 20px; }
+        label { display: block; font-size: 13px; margin-bottom: 8px; color: #bdc3c7; }
+        input[type=range] { width: 100%; }
+        select { width: 100%; padding: 8px; border-radius: 4px; background: #34495e; color: white; border: 1px solid #7f8c8d; cursor: pointer; }
+        .results { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid var(--accent); }
+        .val { color: #f1c40f; font-weight: bold; font-family: monospace; }
+        .formula { font-style: italic; font-size: 14px; text-align: center; margin-bottom: 15px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="nav-header">
+    <a href="index.html" class="back-btn">← Back to Library</a>
+</div>
+
+<div class="main-layout">
+    <div class="controls">
+        <h3>Lab Equipment</h3>
+        <div class="slider-group">
+            <label>Metal Cathode Surface:</label>
+            <select id="metalSelect">
+                <option value="2.3">Potassium (Φ = 2.30 eV)</option>
+                <option value="2.7">Sodium (Φ = 2.70 eV)</option>
+                <option value="2.9">Lithium (Φ = 2.90 eV)</option>
+                <option value="4.1">Aluminum (Φ = 4.10 eV)</option>
+                <option value="4.5">Chromium (Φ = 4.50 eV)</option>
+                <option value="4.7">Copper (Φ = 4.70 eV)</option>
+                <option value="5.1">Gold (Φ = 5.10 eV)</option>
+                <option value="6.35">Platinum (Φ = 6.35 eV)</option>
+            </select>
+        </div>
+        <div class="slider-group">
+            <label>Wavelength (λ): <span class="val" id="waveVal">400</span> nm</label>
+            <input type="range" id="waveIn" min="100" max="800" value="400">
+        </div>
+        <div class="slider-group">
+            <label>Retarding Potential (V<sub>s</sub>): <span class="val" id="voltVal">0.0</span> V</label>
+            <input type="range" id="voltIn" min="0" max="5" step="0.1" value="0">
+        </div>
+        <div class="results">
+            <div>Photon Energy: <span class="val" id="ePhot">3.10</span> eV</div>
+            <div>Max KE: <span class="val" id="maxKE">0.80</span> eV</div>
+            <div id="status" style="margin-top:10px; font-weight:bold; color:#e74c3c;">EMISSION ACTIVE</div>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <h2>Photoelectric Effect Simulation</h2>
+        <div class="formula">h&nu; = &Phi; + KE<sub>max</sub></div>
+        <canvas id="peCanvas" width="600" height="400"></canvas>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('peCanvas');
+    const ctx = canvas.getContext('2d');
+    const h = 4.1357e-15; const c = 3e17;
+    const waveIn = document.getElementById('waveIn');
+    const voltIn = document.getElementById('voltIn');
+    const metalSelect = document.getElementById('metalSelect');
+    let particles = [];
+
+    function update() {
+        const lambda = parseFloat(waveIn.value);
+        const phi = parseFloat(metalSelect.value);
+        const Vs = parseFloat(voltIn.value);
+        const ePhoton = (h * c) / lambda;
+        const keMax = ePhoton - phi;
+        const canEmit = ePhoton > phi;
+        const reachedAnode = keMax > Vs;
+
+        document.getElementById('waveVal').innerText = lambda;
+        document.getElementById('voltVal').innerText = Vs.toFixed(1);
+        document.getElementById('ePhot').innerText = ePhoton.toFixed(2);
+        document.getElementById('maxKE').innerText = canEmit ? keMax.toFixed(2) : "0.00";
+        
+        const status = document.getElementById('status');
+        if (!canEmit) { status.innerText = "NO EMISSION (f < f₀)"; status.style.color = "#e74c3c"; }
+        else if (!reachedAnode) { status.innerText = "STOPPED (V ≥ Vₛ)"; status.style.color = "#f39c12"; }
+        else { status.innerText = "CURRENT FLOWING"; status.style.color = "#2ecc71"; }
+
+        render(lambda, canEmit, keMax, Vs);
+    }
+
+    function render(lambda, canEmit, keMax, Vs) {
+        ctx.clearRect(0, 0, 600, 400);
+        ctx.strokeStyle = "#34495e"; ctx.lineWidth = 2; ctx.strokeRect(50, 100, 500, 200);
+        ctx.fillStyle = "#95a5a6"; ctx.fillRect(60, 120, 20, 160); ctx.fillRect(520, 120, 20, 160);
+        const hue = ((800 - lambda) / 700) * 280;
+        ctx.strokeStyle = `hsla(${hue}, 100%, 50%, 0.6)`; ctx.lineWidth = 15;
+        for(let i=0; i<5; i++) { ctx.beginPath(); ctx.moveTo(0, 150 + i*25); ctx.lineTo(60, 175 + i*25); ctx.stroke(); }
+        if (canEmit && Math.random() > 0.8) { particles.push({ x: 80, y: 120 + Math.random()*160, v: Math.sqrt(keMax)*5, accel: -Vs*0.1 }); }
+        ctx.fillStyle = "#f1c40f";
+        particles.forEach((p, index) => {
+            p.v += p.accel; p.x += p.v; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 7); ctx.fill();
+            if (p.x > 520 || p.x < 80 || p.v <= 0) { particles.splice(index, 1); }
+        });
+    }
+    setInterval(update, 30);
+    [waveIn, voltIn, metalSelect].forEach(el => el.addEventListener('input', () => { if(el.id === 'waveIn' || el.id === 'metalSelect') particles = []; }));
+</script>
+</body>
+</html>
