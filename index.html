@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magee's Physics Lab Library</title>
+    <title>KeV's Physics Simulation Portal</title>
     <style>
         :root {
             --bg: #0f172a;
-            --panel: #1e293b;
-            --accent: #00d4ff;
-            --secondary: #f1c40f;
-            --text: #f8fafc;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text: #f1f5f9;
         }
 
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -26,72 +25,120 @@
 
         header {
             text-align: center;
-            padding: 50px 20px;
+            padding: 40px 20px;
         }
 
-        h1 { color: var(--accent); margin-bottom: 10px; }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
 
-        /* The Grid for your Lab Cards */
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
         .library-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
-            max-width: 900px;
             width: 90%;
+            max-width: 1200px;
             padding: 20px;
         }
 
-        /* The Card Design */
         .card {
-            background: var(--panel);
-            border: 2px solid #334155;
-            border-radius: 15px;
-            padding: 25px;
-            text-decoration: none; /* Removes link underline */
+            background: var(--card-bg);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            text-decoration: none;
             color: inherit;
             transition: all 0.3s ease;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .card:hover {
-            border-color: var(--accent);
             transform: translateY(-5px);
+            border-color: var(--accent);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .card h3 { color: var(--secondary); margin: 15px 0 10px 0; }
-        .card p { font-size: 0.9rem; color: #94a3b8; line-height: 1.4; }
-        .icon { font-size: 40px; }
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
 
+        .card h3 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--accent);
+        }
+
+        .card p {
+            margin: 0;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #7dd3fc;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Magee's Physics Lab</h1>
-        <p>Interactive simulations for the classroom.</p>
+        <h1>Physics Lab Portal</h1>
+        <p class="subtitle">Interactive simulations for A-Level & University Physics</p>
     </header>
 
-    <div class="library-grid">
+    <main class="library-grid">
         
         <a href="energy-levels.html" class="card">
+            <div class="tag">Quantum</div>
             <div class="icon">⚛️</div>
-            <h3>Electron Energy Levels</h3>
-            <p>Drag electrons to observe photon emission and absorption gaps.</p>
+            <h3>Electron Transitions</h3>
+            <p>Visualize photon emission and absorption as electrons jump between discrete energy shells.</p>
         </a>
 
         <a href="photoelectric.html" class="card">
+            <div class="tag">Quantum</div>
             <div class="icon">🔦</div>
             <h3>Photoelectric Effect</h3>
-            <p>Test threshold frequencies and stopping potentials for different metals.</p>
+            <p>Investigate work function, threshold frequency, and stopping potential on various metals.</p>
         </a>
-        
+
         <a href="deflection.html" class="card">
+            <div class="tag">Fields</div>
             <div class="icon">☄️</div>
-            <h3>Particle Deflection</h3>
-            <p>Predict trajectories in uniform electric fields and visualize potential lines.</p>
+            <h3>Relativistic Deflection</h3>
+            <p>Fire particles through electric fields at up to 0.8c. Toggle field lines and equipotentials.</p>
         </a>
-        </div>
+
+        <a href="scattering.html" class="card">
+            <div class="tag">Nuclear</div>
+            <div class="icon">🎯</div>
+            <h3>Alpha Scattering</h3>
+            <p>Recreate the Rutherford Gold Foil experiment. Change impact parameters and projectile ions.</p>
+        </a>
+
+    </main>
+
+    <footer style="margin-top: auto; padding: 40px; color: #475569; font-size: 0.9rem;">
+        &copy; 2026 Simulation Portal • Built for Science Education
+    </footer>
 
 </body>
 </html>
