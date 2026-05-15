@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Rutherford Scattering</title>
+    <style>
+        :root { --panel: #f8fafc; --bg: #f1f5f9; --accent: #eab308; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #1e293b; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        
+        .nav-header { width: 100%; padding: 15px; background: #1e293b; display: flex; justify-content: flex-start; }
+        .back-btn { color: #38bdf8; text-decoration: none; font-weight: bold; border: 1px solid #38bdf8; padding: 5px 15px; border-radius: 4px; }
+        
+        .main-layout { display: flex; gap: 20px; padding: 20px; width: 1100px; justify-content: center; }
+        .controls { width: 360px; background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .canvas-area { background: #ffffff; border-radius: 12px; border: 2px solid #cbd5e1; position: relative; overflow: hidden; }
+        
+        .slider-group { margin-bottom: 20px; }
+        label { display: block; font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 700; }
+        
+        /* Custom "No-Number" Scale */
+        .scale-container { display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 5px; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #ef4444; }
+
+        select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; margin-bottom: 10px; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .fire-btn { background: #10b981; color: white; font-size: 16px; grid-column: span 2; }
+        .clear-btn { background: #94a3b8; color: white; }
+        
+        .stats { background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 5px solid var(--accent); }
+        .stat-line { display: flex; justify-content: space-between; font-family: monospace; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="nav-header">
+    <a href="index.html" class="back-btn">← Back to Library</a>
+</div>
+
+<h2 style="color: #1e293b; margin: 20px 0;">Ion Scattering & Nucleus Lab</h2>
+
+<div class="main-layout">
+    <div class="controls">
+        <div class="slider-group">
+            <label>1. Select Projectile Ion:</label>
+            <select id="projectile">
+                <option value="1,1,#3b82f6">Proton (1+)</option>
+                <option value="2,4,#ef4444" selected>Alpha Particle (2+)</option>
+                <option value="3,7,#8b5cf6">Lithium Ion (3+)</option>
+                <option value="6,12,#10b981">Carbon Ion (6+)</option>
+                <option value="12,24,#f59e0b">Magnesium Ion (12+)</option>
+            </select>
+        </div>
+
+        <div class="slider-group">
+            <label>2. Select Target Nucleus:</label>
+            <select id="target">
+                <option value="79,Gold">Gold (Z=79)</option>
+                <option value="82,Lead">Lead (Z=82)</option>
+                <option value="47,Silver">Silver (Z=47)</option>
+                <option value="29,Copper">Copper (Z=29)</option>
+                <option value="13,Aluminum">Aluminum (Z=13)</option>
+            </select>
+        </div>
+
+        <div class="slider-group">
+            <label>3. Adjust Impact Path (b):</label>
+            <input type="range" id="bSlider" min="-120" max="120" value="30">
+            <div class="scale-container">
+                <span>Lower Edge</span>
+                <span>Central Hit (Direct)</span>
+                <span>Upper Edge</span>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="fire-btn" onclick="fire()">FIRE BEAM</button>
+            <button class="clear-btn" onclick="clearTrails()">CLEAR ALL</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-line"><span>Exit Angle:</span> <span id="angleDisp">0</span>°</div>
+            <div class="stat-line"><span>Target:</span> <span id="targetDisp">Gold</span></div>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <canvas id="simCanvas" width="700" height="500"></canvas>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentIons = [];
+    let savedTrails = [];
+    const nucleusPos = { x: 480, y: 250 };
+
+    function fire() {
+        const pData = document.getElementById('projectile').value.split(',');
+        const b = parseFloat(document.getElementById('bSlider').value);
+        
+        currentIons.push({
+            x: 0,
+            y: 250 + b,
+            vx: 6, 
+            vy: 0,
+            z: parseInt(pData[0]),
+            m: parseInt(pData[1]),
+            color: pData[2],
+            path: []
+        });
+    }
+
+    function clearTrails() { currentIons = []; savedTrails = []; }
+
+    function draw() {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const tData = document.getElementById('target').value.split(',');
+        const Z_target = parseInt(tData[0]);
+        document.getElementById('targetDisp').innerText = tData[1];
+
+        // Draw Target Nucleus
+        ctx.fillStyle = '#eab308';
+        ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(234, 179, 8, 0.5)';
+        ctx.beginPath(); ctx.arc(nucleusPos.x, nucleusPos.y, 18, 0, 7); ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = '#475569';
+        ctx.font = "bold 12px Arial";
+        ctx.fillText(`${tData[1]} Nucleus`, nucleusPos.x - 30, nucleusPos.y + 40);
+
+        // Process Ions
+        currentIons.forEach((p, idx) => {
+            const dx = nucleusPos.x - p.x;
+            const dy = nucleusPos.y - p.y;
+            const r2 = dx*dx + dy*dy;
+            const r = Math.sqrt(r2);
+
+            if (r > 12) {
+                // Coulomb Repulsion: F = k * (q1*q2)/r^2
+                const force = (p.z * Z_target * 400) / r2;
+                const ax = -(force * (dx/r)) / p.m;
+                const ay = -(force * (dy/r)) / p.m;
+
+                p.vx += ax; p.vy += ay;
+                p.x += p.vx; p.y += p.vy;
+                p.path.push({x: p.x, y: p.y});
+
+                if (p.x > 720 || p.x < -20 || p.y > 520 || p.y < -20) {
+                    const angle = Math.abs(Math.atan2(p.vy, p.vx) * 180 / Math.PI);
+                    document.getElementById('angleDisp').innerText = angle.toFixed(1);
+                    savedTrails.push({path: p.path, color: p.color});
+                    currentIons.splice(idx, 1);
+                }
+            } else { currentIons.splice(idx, 1); } // Collision
+        });
+
+        // Draw Trails
+        savedTrails.forEach(t => {
+            ctx.beginPath(); ctx.strokeStyle = t.color + '44'; // Add transparency
+            ctx.lineWidth = 2;
+            t.path.forEach((pos, i) => { if(i===0) ctx.moveTo(pos.x, pos.y); else ctx.lineTo(pos.x, pos.y); });
+            ctx.stroke();
+        });
+
+        // Draw Active Particles
+        currentIons.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+</script>
+</body>
+</html>
