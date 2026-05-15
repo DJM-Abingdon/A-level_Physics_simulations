@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magee's Physics Simulator Library</title>
+    <title>Magee's Physics Lab Library</title>
     <style>
         :root {
             --bg: #0f172a;
@@ -16,7 +16,7 @@
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -24,289 +24,69 @@
             min-height: 100vh;
         }
 
-        /* Nav & Layout */
-        nav {
-            width: 100%;
-            background: var(--panel);
-            padding: 1rem 0;
-            display: flex;
-            justify-content: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .home-btn {
-            background: var(--accent);
-            color: var(--bg);
-            border: none;
-            padding: 0.5rem 1.5rem;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .home-btn:hover { transform: scale(1.05); }
-
-        /* Home Page */
-        #home-page {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px;
+        header {
             text-align: center;
+            padding: 50px 20px;
         }
 
+        h1 { color: var(--accent); margin-bottom: 10px; }
+
+        /* The Grid for your Lab Cards */
         .library-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            max-width: 1000px;
-            width: 100%;
-            margin-top: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 900px;
+            width: 90%;
+            padding: 20px;
         }
 
+        /* The Card Design */
         .card {
             background: var(--panel);
             border: 2px solid #334155;
             border-radius: 15px;
-            padding: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 25px;
+            text-decoration: none; /* Removes link underline */
+            color: inherit;
+            transition: all 0.3s ease;
+            text-align: center;
         }
 
         .card:hover {
             border-color: var(--accent);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
             transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .card h3 { color: var(--secondary); margin: 10px 0; }
-        .card p { font-size: 0.9rem; color: #94a3b8; }
+        .card h3 { color: var(--secondary); margin: 15px 0 10px 0; }
+        .card p { font-size: 0.9rem; color: #94a3b8; line-height: 1.4; }
+        .icon { font-size: 40px; }
 
-        /* Simulator Containers */
-        .sim-container {
-            display: none;
-            width: 100%;
-            padding: 20px;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Re-used styles from your files */
-        #container-energy { position: relative; border: 2px solid #334155; background: #000; border-radius: 8px;}
-        .ui-overlay { position: absolute; top: 10px; left: 10px; pointer-events: none; }
-        .data-box { background: rgba(0,0,0,0.7); padding: 10px; border: 1px solid #00d4ff; border-radius: 5px; margin-bottom: 5px; }
-        .label { color: #888; font-size: 12px; }
-        .value { color: #00d4ff; font-weight: bold; font-size: 18px; }
-        .photon-text { color: #f1c40f; }
-
-        .pe-layout { display: flex; gap: 20px; color: #2c3e50; max-width: 1000px; }
-        .pe-controls { width: 320px; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; }
-        .pe-canvas-area { background: white; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; color: #2c3e50; }
-        .slider-group { margin-bottom: 20px; }
-        .slider-group label { display: block; font-size: 13px; margin-bottom: 8px; color: #bdc3c7; }
-        .pe-val { color: #f1c40f; font-weight: bold; font-family: monospace; }
-        .pe-select { width: 100%; padding: 8px; border-radius: 4px; background: #34495e; color: white; }
     </style>
 </head>
 <body>
 
-<nav>
-    <button class="home-btn" onclick="showPage('home-page')">🏠 HOME LIBRARY</button>
-</nav>
+    <header>
+        <h1>Magee's Physics Lab</h1>
+        <p>Interactive simulations for the classroom.</p>
+    </header>
 
-<div id="home-page">
-    <h1>Physics Lab Portal</h1>
-    <p>Select a simulator from the library to begin your experiment.</p>
-    
     <div class="library-grid">
-        <div class="card" onclick="showPage('sim-energy')">
-            <div style="font-size: 50px;">⚛️</div>
+        
+        <a href="energy-levels.html" class="card">
+            <div class="icon">⚛️</div>
             <h3>Electron Energy Levels</h3>
-            <p>Study transitions and photon emissions in a Bohr-style energy diagram.</p>
-        </div>
-        
-        <div class="card" onclick="showPage('sim-photoelectric')">
-            <div style="font-size: 50px;">🔦</div>
+            <p>Drag electrons to observe photon emission and absorption gaps.</p>
+        </a>
+
+        <a href="photoelectric.html" class="card">
+            <div class="icon">🔦</div>
             <h3>Photoelectric Effect</h3>
-            <p>Explore work functions, stopping potential, and wave-particle duality.</p>
+            <p>Test threshold frequencies and stopping potentials for different metals.</p>
+        </a>
+
         </div>
-    </div>
-</div>
 
-<div id="sim-energy" class="sim-container">
-    <h2 style="color: #f1c40f;">Electron Transition Simulator</h2>
-    <div id="container-energy">
-        <div class="ui-overlay">
-            <div class="data-box">
-                <div class="label">CURRENT LEVEL</div>
-                <div id="lvlDisplay" class="value">n = 1</div>
-            </div>
-            <div class="data-box">
-                <div class="label">PHOTON ENERGY</div>
-                <div id="energyDisplay" class="value photon-text">0.00 eV</div>
-            </div>
-        </div>
-        <canvas id="atomSim" width="800" height="500"></canvas>
-    </div>
-</div>
-
-<div id="sim-photoelectric" class="sim-container">
-    <div class="pe-layout">
-        <div class="pe-controls">
-            <h3>Lab Equipment</h3>
-            <div class="slider-group">
-                <label>Metal Cathode Surface:</label>
-                <select id="metalSelect" class="pe-select">
-                    <option value="2.3">Potassium (Φ = 2.30 eV)</option>
-                    <option value="2.7">Sodium (Φ = 2.70 eV)</option>
-                    <option value="2.9">Lithium (Φ = 2.90 eV)</option>
-                    <option value="4.1">Aluminum (Φ = 4.10 eV)</option>
-                    <option value="4.5">Chromium (Φ = 4.50 eV)</option>
-                    <option value="4.7">Copper (Φ = 4.70 eV)</option>
-                    <option value="5.1">Gold (Φ = 5.10 eV)</option>
-                    <option value="6.35">Platinum (Φ = 6.35 eV)</option>
-                </select>
-            </div>
-            <div class="slider-group">
-                <label>Wavelength (λ): <span class="pe-val" id="waveVal">400</span> nm</label>
-                <input type="range" id="waveIn" min="100" max="800" value="400">
-            </div>
-            <div class="slider-group">
-                <label>Retarding Potential (V<sub>s</sub>): <span class="pe-val" id="voltVal">0.0</span> V</label>
-                <input type="range" id="voltIn" min="0" max="5" step="0.1" value="0">
-            </div>
-            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
-                <div>Photon Energy: <span class="pe-val" id="ePhot">3.10</span> eV</div>
-                <div>Max KE: <span class="pe-val" id="maxKE">0.80</span> eV</div>
-                <div id="peStatus" style="margin-top:10px; font-weight:bold; color:#e74c3c;">EMISSION ACTIVE</div>
-            </div>
-        </div>
-        <div class="pe-canvas-area">
-            <h2>Photoelectric Effect Simulation</h2>
-            <canvas id="peCanvas" width="600" height="400"></canvas>
-        </div>
-    </div>
-</div>
-
-<script>
-    // PAGE NAVIGATION LOGIC
-    function showPage(pageId) {
-        document.querySelectorAll('.sim-container, #home-page').forEach(p => p.style.display = 'none');
-        document.getElementById(pageId).style.display = 'flex';
-        
-        // Reset specific simulator states if needed
-        if(pageId === 'sim-photoelectric') { particles = []; }
-    }
-
-    // --- SIMULATOR 1: ENERGY LEVELS LOGIC ---
-    const eCanvas = document.getElementById('atomSim');
-    const eCtx = eCanvas.getContext('2d');
-    const shells = [
-        { n: 1, e: -13.6, y: 440 }, { n: 2, e: -3.40, y: 280 },
-        { n: 3, e: -1.51, y: 180 }, { n: 4, e: -0.85, y: 110 }, { n: 5, e: -0.54, y: 60 }
-    ];
-    let electron = { x: 400, y: shells[0].y, nIdx: 0, dragging: false };
-    let photonsE = [];
-
-    function drawEnergy() {
-        if (document.getElementById('sim-energy').style.display === 'none') return requestAnimationFrame(drawEnergy);
-        eCtx.fillStyle = '#000';
-        eCtx.fillRect(0, 0, 800, 500);
-        shells.forEach((s, i) => {
-            eCtx.strokeStyle = (electron.nIdx === i) ? '#1e293b' : '#334155';
-            eCtx.lineWidth = (electron.nIdx === i) ? 4 : 1;
-            eCtx.beginPath(); eCtx.moveTo(150, s.y); eCtx.lineTo(650, s.y); eCtx.stroke();
-            eCtx.fillStyle = (electron.nIdx === i) ? '#00d4ff' : '#64748b';
-            eCtx.fillText(`n=${s.n}`, 110, s.y + 5); eCtx.fillText(`${s.e} eV`, 665, s.y + 5);
-        });
-        photonsE.forEach((p, idx) => {
-            p.x += p.dir * 4; p.offset += 0.3; eCtx.strokeStyle = p.color; eCtx.lineWidth = 2;
-            eCtx.beginPath();
-            for(let i=0; i<50; i++) {
-                let x = p.x - (i * p.dir); let y = p.y + Math.sin(p.offset - i*0.4) * 12;
-                if(i===0) eCtx.moveTo(x, y); else eCtx.lineTo(x, y);
-            }
-            eCtx.stroke();
-            if(p.x > 900 || p.x < -100) photonsE.splice(idx, 1);
-        });
-        eCtx.save(); eCtx.shadowBlur = 20; eCtx.shadowColor = '#00d4ff'; eCtx.fillStyle = '#00d4ff';
-        eCtx.beginPath(); eCtx.arc(electron.x, electron.y, 12, 0, Math.PI*2); eCtx.fill(); eCtx.restore();
-        requestAnimationFrame(drawEnergy);
-    }
-
-    eCanvas.onmousedown = (e) => {
-        const rect = eCanvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
-        if(Math.hypot(mx - electron.x, my - electron.y) < 30) electron.dragging = true;
-    };
-    window.onmousemove = (e) => {
-        if(!electron.dragging) return;
-        const rect = eCanvas.getBoundingClientRect();
-        electron.y = Math.max(20, Math.min(480, e.clientY - rect.top));
-    };
-    window.onmouseup = () => {
-        if(!electron.dragging) return;
-        electron.dragging = false;
-        let bestIdx = 0; let minD = 9999;
-        shells.forEach((s, i) => { let d = Math.abs(electron.y - s.y); if(d < minD) { minD = d; bestIdx = i; }});
-        if(bestIdx !== electron.nIdx) {
-            const dE = Math.abs(shells[bestIdx].e - shells[electron.nIdx].e);
-            document.getElementById('energyDisplay').innerText = dE.toFixed(2) + " eV";
-            photonsE.push({ x: electron.x, y: shells[bestIdx].y, dir: bestIdx < electron.nIdx ? 1 : -1, offset: 0, color: dE > 3 ? '#a855f7' : '#f1c40f' });
-        }
-        electron.nIdx = bestIdx; electron.y = shells[bestIdx].y;
-        document.getElementById('lvlDisplay').innerText = `n = ${shells[bestIdx].n}`;
-    };
-
-    // --- SIMULATOR 2: PHOTOELECTRIC LOGIC ---
-    const peCanvas = document.getElementById('peCanvas');
-    const peCtx = peCanvas.getContext('2d');
-    const h = 4.1357e-15; const c = 3e17;
-    let particles = [];
-
-    function updatePE() {
-        if (document.getElementById('sim-photoelectric').style.display === 'none') return;
-        const lambda = parseFloat(document.getElementById('waveIn').value);
-        const phi = parseFloat(document.getElementById('metalSelect').value);
-        const Vs = parseFloat(document.getElementById('voltIn').value);
-        const ePhoton = (h * c) / lambda;
-        const keMax = ePhoton - phi;
-        const canEmit = ePhoton > phi;
-        const reachedAnode = keMax > Vs;
-
-        document.getElementById('waveVal').innerText = lambda;
-        document.getElementById('voltVal').innerText = Vs.toFixed(1);
-        document.getElementById('ePhot').innerText = ePhoton.toFixed(2);
-        document.getElementById('maxKE').innerText = canEmit ? keMax.toFixed(2) : "0.00";
-        
-        const status = document.getElementById('peStatus');
-        if (!canEmit) { status.innerText = "NO EMISSION (f < f₀)"; status.style.color = "#e74c3c"; }
-        else if (!reachedAnode) { status.innerText = "STOPPED (V ≥ Vₛ)"; status.style.color = "#f39c12"; }
-        else { status.innerText = "CURRENT FLOWING"; status.style.color = "#2ecc71"; }
-
-        peCtx.clearRect(0, 0, 600, 400);
-        peCtx.strokeStyle = "#34495e"; peCtx.strokeRect(50, 100, 500, 200);
-        peCtx.fillStyle = "#95a5a6"; peCtx.fillRect(60, 120, 20, 160); peCtx.fillRect(520, 120, 20, 160);
-        const hue = ((800 - lambda) / 700) * 280;
-        peCtx.strokeStyle = `hsla(${hue}, 100%, 50%, 0.6)`; peCtx.lineWidth = 15;
-        for(let i=0; i<5; i++) { peCtx.beginPath(); peCtx.moveTo(0, 150 + i*25); peCtx.lineTo(60, 175 + i*25); peCtx.stroke(); }
-        if (canEmit && Math.random() > 0.8) { particles.push({ x: 80, y: 120 + Math.random()*160, v: Math.sqrt(keMax)*5, accel: -Vs*0.1 }); }
-        peCtx.fillStyle = "#f1c40f";
-        particles.forEach((p, idx) => {
-            p.v += p.accel; p.x += p.v; peCtx.beginPath(); peCtx.arc(p.x, p.y, 3, 0, 7); peCtx.fill();
-            if (p.x > 520 || p.x < 80 || p.v <= 0) particles.splice(idx, 1);
-        });
-    }
-
-    setInterval(updatePE, 30);
-    drawEnergy();
-</script>
 </body>
 </html>
